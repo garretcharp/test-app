@@ -10,6 +10,9 @@ export const getApollo = (app: express.Express, httpServer: http.Server): Apollo
 		server = new ApolloServer({
 			resolvers,
 			typeDefs,
+			context: ({ req, res }) => {
+				return { req, res }
+			},
 			playground: process.env.NODE_ENV !== 'production'
 		})
 

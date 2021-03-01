@@ -1,25 +1,28 @@
+import type express from 'express'
 import type { IResolvers } from 'apollo-server-express'
+import { hostname } from 'os'
 import { getPubSub } from '../../server/pubsub'
 
-let hello = process.env.SOME_SECRET ?? 'no secret provided for initial value'
+let hello = `${hostname()}--${process.env.SOME_SECRET ?? 'no secret provided for initial value'}`
 
 const events = {
 	change: 'HELLO_CHANGED'
 }
 
-const resolvers: IResolvers<unknown, unknown> = {
+const resolvers: IResolvers<unknown, { req: express.Request, res: express.Response }> = {
 	Query: {
-		hello: (): string => hello
+		hello: () => hello
 	},
 	Mutation: {
-		setHello: (_parent: unknown, { text }: { text: string }): string => {
+		setHello: (_, { text }: { text: string }) => {
 			if (typeof text !== 'string') {
 				console.log({ text })
 				throw new Error('Invalid args')
 			}
 
-			hello = text
+			hello = `${hostname()}--${text}`
 			getPubSub().publish(events.change, { helloChanged: hello })
+
 			return hello
 		}
 	},
